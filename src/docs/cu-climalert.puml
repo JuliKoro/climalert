@@ -1,0 +1,37 @@
+@startuml
+skinparam actorStyle awesome
+left to right direction
+
+' --- Actores ---
+actor "Reloj del Sistema" as Reloj <<Aplicación>>
+actor "WeatherAPI" as WeatherAPI <<Sistema Externo>>
+actor "Servidor SMTP" as SMTP <<Sistema Externo>>
+
+' --- Sistema ---
+package "Sistema Climalert" {
+    usecase "CU1: Registrar Clima Actual" as CU_Registrar
+    usecase "Consultar Clima Actual" as CU_Consultar
+    usecase "CU2: Evaluar Alertas Meteorológicas" as CU_Evaluar
+    usecase "Notificar Alerta por Correo" as CU_Notificar
+    
+    ' Puntos de extensión y notas de diseño DSI
+    note right of CU_Evaluar
+      **Punto de Extensión**:
+      -- Condición: {temperatura > 35°C **y** humedad > 60%}
+      -- Referencia: Medición no analizada previamente
+    end note
+}
+
+' --- Asociaciones y Relaciones ---
+Reloj --> CU_Registrar : Dispara cada 5 min
+Reloj --> CU_Evaluar : Dispara cada 1 min
+
+' Incluye (CU_Registrar requiere obligatoriamente consultar el clima al proveedor)
+CU_Registrar ..> CU_Consultar : <<include>>
+CU_Consultar --> WeatherAPI : GET /current.json
+
+' Extiende (CU_Notificar se ejecuta de forma condicional desde CU_Evaluar)
+CU_Evaluar <.. CU_Notificar : <<extend>>
+CU_Notificar --> SMTP : Envía email a destinatarios
+
+@endum

@@ -1,0 +1,87 @@
+@startuml
+skinparam classAttributeIconSize 0
+left to right direction
+
+' --- Definición de Estilos / Colores DSI ---
+skinparam class {
+    BackgroundColor<<Entity>> #E3F2FD
+    BorderColor<<Entity>> #1E88E5
+    BackgroundColor<<Interface>> #E8F5E9
+    BorderColor<<Interface>> #43A047
+}
+
+package "Domain Layer - Capa de Dominio" {
+
+    ' --- Entidades de Dominio ---
+    class RegistroClima <<Entity>> {
+        - id: Long
+        - fechaMedicion: LocalDateTime
+        - temperatura: double
+        - humedad: double
+        - ubicacion: String
+        - condicion: String
+        - analizado: boolean
+        + superaUmbralCritico(): boolean
+        + marcarComoAnalizado(): void
+    }
+
+    class AlertaClimatica <<Entity>> {
+        - id: Long
+        - fechaGeneracion: LocalDateTime
+        - destinatarios: List<String>
+        - cuerpoMensaje: String
+        - notificada: boolean
+        + {static} crearAlerta(registro: RegistroClima, destinatarios: List<String>, cuerpo: String): AlertaClimatica
+        + marcarComoNotificada(): void
+    }
+
+    ' --- Interfaces de Repositorio (Puertos de Persistencia) ---
+    interface RegistroClimaRepository <<Interface>> {
+        + save(registro: RegistroClima): RegistroClima
+        + findById(id: Long): Optional<RegistroClima>
+        + findLatest(): Optional<RegistroClima>
+        + findAll(): List<RegistroClima>
+    }
+
+    interface AlertaRepository <<Interface>> {
+        + save(alerta: AlertaClimatica): AlertaClimatica
+        + findById(id: Long): Optional<AlertaClimatica>
+        + findAll(): List<AlertaClimatica>
+    }
+
+    ' --- Interfaces de Servicios Externos (Puertos de Integración) ---
+    interface ProveedorClima <<Interface>> {
+        + obtenerClimaActual(ubicacion: String): RegistroClima
+    }
+
+    interface NotificacionService <<Interface>> {
+        + enviarAlerta(alerta: AlertaClimatica): void
+    }
+
+    ' --- Interfaz del Servicio de Aplicación ---
+    interface MonitoreoClimaService <<Interface>> {
+        + registrarClimaActual(ubicacion: String): RegistroClima
+        + evaluarAlertas(): void
+        + obtenerHistoricoClima(): List<RegistroClima>
+        + obtenerHistoricoAlertas(): List<AlertaClimatica>
+    }
+}
+
+' --- Relaciones y Asociaciones ---
+
+' Asociación entre Alerta y su Registro de Clima de origen
+AlertaClimatica "0..*" --> "1" RegistroClima : registroOrigen
+
+' Dependencias de los repositorios y servicios externos con las entidades
+RegistroClimaRepository ..> RegistroClima : "gestiona"
+AlertaRepository ..> AlertaClimatica : "gestiona"
+ProveedorClima ..> RegistroClima : "retorna"
+NotificacionService ..> AlertaClimatica : "recibe"
+
+' El servicio de monitoreo utiliza repositorios y servicios de dominio
+MonitoreoClimaService ..> RegistroClimaRepository : "usa"
+MonitoreoClimaService ..> AlertaRepository : "usa"
+MonitoreoClimaService ..> ProveedorClima : "usa"
+MonitoreoClimaService ..> NotificacionService : "usa"
+
+@endum

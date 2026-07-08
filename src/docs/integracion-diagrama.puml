@@ -1,0 +1,53 @@
+@startuml
+skinparam componentStyle uml2
+left to right direction
+
+' --- Sistemas Externos ---
+cloud "WeatherAPI (Proveedor Clima)" as WeatherAPI
+cloud "Servidor SMTP (Correo)" as SMTP
+
+' --- Componente de Planificación ---
+package "Capa de Scheduling" {
+    [ClimaScheduler] as Scheduler <<Component>>
+}
+
+' --- Componente de Negocio/Dominio ---
+package "Capa de Aplicación y Dominio" {
+    [MonitoreoClimaService] as CoreService <<Component>>
+    
+    ' Interfaces expuestas/requeridas por el Dominio (Puertos)
+    interface "ProveedorClima" as IProveedor
+    interface "NotificacionService" as INotificador
+    interface "RegistroClimaRepository" as IClimaRepo
+    interface "AlertaRepository" as IAlertaRepo
+}
+
+' --- Componentes de Infraestructura ---
+package "Capa de Infraestructura" {
+    [WeatherApiAdapter] as WeatherAdapter <<Component>>
+    [EmailNotificacionServiceImpl] as EmailAdapter <<Component>>
+    [InMemoryRepositories] as Repositories <<Component>>
+}
+
+' --- Relaciones y Dependencias ---
+
+' El Programador periódicamente orquesta el caso de uso
+Scheduler ..> CoreService : "Invoca registrarClima() y evaluarAlertas()"
+
+' El núcleo de negocio utiliza las abstracciones (Puertos) sin conocer la implementación
+CoreService ..> IProveedor : "requiere"
+CoreService ..> INificador : "requiere"
+CoreService ..> IClimaRepo : "requiere"
+CoreService ..> IAlertaRepo : "requiere"
+
+' La infraestructura implementa (realiza) las interfaces mediante adaptadores
+WeatherAdapter -up-|> IProveedor : "realiza"
+EmailAdapter -up-|> INificador : "realiza"
+Repositories -up-|> IClimaRepo : "realiza"
+Repositories -up-|> IAlertaRepo : "realiza"
+
+' Integración con el exterior
+WeatherAdapter ..> WeatherAPI : "Llamada HTTP Rest (RestClient)"
+EmailAdapter ..> SMTP : "Envío de Mail (JavaMailSender)"
+
+@endum
