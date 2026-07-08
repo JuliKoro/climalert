@@ -1,6 +1,6 @@
 # Climalert - Sistema de Monitoreo Climático y Alertas
 
-Este proyecto consiste en el diseño y desarrollo de **Climalert**, un sistema autónomo de monitoreo climático y envío automático de alertas por correo electrónico. El diseño arquitectónico está basado estrictamente en el estilo y patrones del repositorio de referencia `smartlife`, respetando los principios **SOLID/GRASP** y las pautas y alcance indicados por la cátedra de **Diseño de Sistemas de Información (Plan 23)** de la **UTN FRBA**.
+Este proyecto consiste en el diseño y desarrollo de **Climalert**, un sistema autónomo de monitoreo climático y envío automático de alertas por correo electrónico.
 
 ---
 
@@ -8,8 +8,8 @@ Este proyecto consiste en el diseño y desarrollo de **Climalert**, un sistema a
 
 *   **Lenguaje**: Java 21.
 *   **Framework**: Spring Boot 4.1.0 (con soporte para `@Scheduled` y `RestClient` nativo).
-*   **Desacoplamiento de Infraestructura (SOLID / Hexagonal)**: La lógica de negocio no conoce detalles de proveedores externos ni del canal de notificación. Se comunica mediante puertos (interfaces de dominio).
-*   **Persistencia Mock en Memoria**: En cumplimiento con las restricciones académicas de la cátedra, **no se utiliza una base de datos relacional real** (JPA / PostgreSQL / H2). La persistencia histórica se simula en memoria utilizando colecciones sincronizadas (`ArrayList`) dentro de repositorios mock thread-safe.
+*   **Desacoplamiento de Infraestructura**: La lógica de negocio no conoce detalles de proveedores externos ni del canal de notificación. Se comunica mediante puertos (interfaces de dominio).
+*   **Persistencia Mock en Memoria**: En cumplimiento con las restricciones académicas de la cátedra. La persistencia histórica se simula en memoria utilizando colecciones sincronizadas (`ArrayList`) dentro de repositorios mock thread-safe.
 *   **Evitación de Alertas Duplicadas**: La lógica de negocio implementa un flag de estado `analizado` en la medición de clima. Esto garantiza que cada registro meteorológico sea evaluado por el motor de alertas exactamente una vez, evitando el spam de notificaciones por correo electrónico.
 *   **Envío de Mails**: Integración con `JavaMailSender` para notificar de forma automática a los destinatarios configurados en caso de condiciones críticas de clima.
 
